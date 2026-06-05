@@ -326,6 +326,26 @@ def deploy_wireguard(
             if not server_pub:
                 raise RuntimeError("Failed to derive server public key from existing private key.")
 
+            # Auto-increment client IP: scan existing peers to find the highest
+            # .2/.3/.4... address, then pick next. Without this, a new device
+            # would default to .2 again, causing the previous device to lose
+            # connectivity (WireGuard routes to the last-matching AllowedIPs).
+            import re as _re
+            existing_ips: "list[str]" = []
+            for line in existing_config_check.splitlines():
+                m = _re.match(r"AllowedIPs\s*=\s*(\d+\.\d+\.\d+\.(\d+))", line.strip())
+                if m:
+                    existing_ips.append(m.group(1))
+            if existing_ips:
+                log(f"  Existing client IPs: {', '.join(existing_ips)}")
+                # Find the highest last-octet and add 1
+                last_octets = [int(ip.rsplit(".", 1)[1].split("/")[0]) for ip in existing_ips]
+                next_octet = max(last_octets) + 1
+                subnet_prefix = existing_ips[0].rsplit(".", 2)[0]
+                new_client_addr = f"{subnet_prefix}.{next_octet}/32"
+                log(f"  Auto-assigning new client address: {new_client_addr}")
+                config.client_vpn_address = new_client_addr
+
             # Backup existing config before modifying
             timestamp_cmd = 'date +%Y%m%d-%H%M%S'
             _, timestamp, _ = _exec_command(client, timestamp_cmd)
@@ -391,17 +411,16 @@ def deploy_wireguard(
             if code != 0:
                 raise RuntimeError(f"Failed to restart WireGuard service: {err or out}")
         else:
-            log("Reloading WireGuard to add new device...")
-            # Use syncconf to apply the updated config without disrupting existing peers
+            log("Adding new device without disrupting existing connections...")
+            # Use `wg set` to add the peer live — no restart, no downtime.
+            # The config file is already updated for persistence across reboots.
             code, out, err = _exec_command(
-                client, "wg syncconf wg0 <(wg-quick strip wg0)"
+                client,
+                f"wg set wg0 peer {client_pub} allowed-ips {config.client_vpn_address}"
             )
             if code != 0:
-                # Fallback: restart if syncconf is not available
-                log("  syncconf unavailable, using restart instead...")
-                code, out, err = _exec_command(client, "systemctl restart wg-quick@wg0")
-                if code != 0:
-                    raise RuntimeError(f"Failed to restart WireGuard: {err or out}")
+                raise RuntimeError(f"Failed to add peer: {err or out}")
+            log("  Peer added to live WireGuard interface.")
 
         code, status, err = _exec_command(client, "systemctl is-active wg-quick@wg0")
         if "active" not in status:
