@@ -11,8 +11,8 @@
 #define AppVersion "1.0"
 #define AppPublisher "MenZenithRBowstringS"
 #define AppURL "https://github.com/Urban-s-Cannon/private-wireguard-vps-deployer"
-#define AppExeName "Urban's Cannon.exe"
-#define SourcePath "dist\Urban's Cannon\*"
+#define AppExeName "Urbans-Cannon.exe"
+#define SourcePath "dist\Urbans-Cannon\*"
 
 [Setup]
 AppId={{B8F4A3D2-7C1E-4A5B-9D2F-1E6C8A3B5F7D}
