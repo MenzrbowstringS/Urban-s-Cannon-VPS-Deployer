@@ -9,6 +9,22 @@
 
 ---
 
+## 更新日志 Changelog
+
+| 版本 | 日期 | 更新内容 |
+|---|---|---|
+| v1.2 | 2026-06-05 | 新增多设备支持：再次部署时自动复用服务器密钥、自动递增客户端 IP、使用 `wg set` 热添加 Peer 不中断已有连接。修复 Windows 桌面图标模糊（缺少中间尺寸）。修复 macOS 构建脚本覆盖自定义图标的问题。 |
+| v1.1 | 2026-06-05 | 统一版本号，macOS 支持多设备部署。 |
+| v1.0 | 2026-06-05 | 首个发布版本，支持 macOS 和 Windows。 |
+
+| Version | Date | Changes |
+|---|---|---|
+| v1.2 | 2026-06-05 | Multi-device support: reuses server keys on subsequent deploys, auto-increments client IP, hot-adds peers via `wg set` without disrupting existing connections. Fixed blurry Windows desktop icon. Fixed macOS build script overwriting custom icon. |
+| v1.1 | 2026-06-05 | Unified version numbers, macOS multi-device support. |
+| v1.0 | 2026-06-05 | Initial release, supports macOS and Windows. |
+
+---
+
 ## 中文
 
 一款 macOS / Windows 桌面应用，帮你自动在 Ubuntu 或 Debian VPS 上部署私人VPN 服务器——无需任何命令行知识。
