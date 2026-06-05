@@ -333,7 +333,7 @@ def deploy_wireguard(
             import re as _re
             existing_ips: "list[str]" = []
             for line in existing_config_check.splitlines():
-                m = _re.match(r"AllowedIPs\s*=\s*(\d+\.\d+\.\d+\.(\d+))", line.strip())
+                m = _re.match(r"AllowedIPs\s*=\s*(10\.\d+\.\d+\.(\d+))", line.strip())
                 if m:
                     existing_ips.append(m.group(1))
             if existing_ips:
@@ -341,7 +341,7 @@ def deploy_wireguard(
                 # Find the highest last-octet and add 1
                 last_octets = [int(ip.rsplit(".", 1)[1].split("/")[0]) for ip in existing_ips]
                 next_octet = max(last_octets) + 1
-                subnet_prefix = existing_ips[0].rsplit(".", 2)[0]
+                subnet_prefix = existing_ips[0].rsplit(".", 1)[0]
                 new_client_addr = f"{subnet_prefix}.{next_octet}/32"
                 log(f"  Auto-assigning new client address: {new_client_addr}")
                 config.client_vpn_address = new_client_addr
