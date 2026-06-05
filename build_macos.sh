@@ -53,9 +53,14 @@ print('  paramiko', paramiko.__version__)
 print('  All imports OK.')
 "
 
-# --- 5. Generate application icon ---
-echo "[6/7] Generating application icon..."
-python resources/generate_icon.py
+# --- 5. Generate application icon (only if missing) ---
+echo "[6/7] Checking application icon..."
+if [ ! -f "$ICON_DIR/app_icon.icns" ]; then
+    python resources/generate_icon.py
+    echo "  Icon generated."
+else
+    echo "  Icon already exists, skipping generation."
+fi
 
 # --- 6. Clean old builds ---
 echo "[7/7] Cleaning old builds..."
