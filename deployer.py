@@ -267,18 +267,82 @@ def deploy_wireguard(
         log(f"  Default interface: {default_iface}")
 
         # ------------------------------------------------------------------
-        # Step 6 – Generate WireGuard keys
+        # Step 6 – Determine: first deploy or adding a device?
         # ------------------------------------------------------------------
-        log("Generating WireGuard keys...")
-        _, server_priv, _ = _exec_command(client, "wg genkey", sensitive=True)
-        if not server_priv:
-            raise RuntimeError("Failed to generate server private key.")
-        _, server_pub, _ = _exec_command(
-            client, f"echo '{server_priv}' | wg pubkey", sensitive=True
+        _, existing_config_check, _ = _exec_command(
+            client, "cat /etc/wireguard/wg0.conf 2>/dev/null || true"
         )
-        if not server_pub:
-            raise RuntimeError("Failed to generate server public key.")
+        is_first_deploy = not existing_config_check or "[Interface]" not in existing_config_check
 
+        if is_first_deploy:
+            # --------------------------------------------------------------
+            # FIRST DEPLOY — generate server keys, write full config
+            # --------------------------------------------------------------
+            log("First deployment — generating server keys...")
+            _, server_priv, _ = _exec_command(client, "wg genkey", sensitive=True)
+            if not server_priv:
+                raise RuntimeError("Failed to generate server private key.")
+            _, server_pub, _ = _exec_command(
+                client, f"echo '{server_priv}' | wg pubkey", sensitive=True
+            )
+            if not server_pub:
+                raise RuntimeError("Failed to generate server public key.")
+
+            # Ensure wireguard directory exists
+            _exec_command(client, "mkdir -p /etc/wireguard")
+
+            server_config = (
+                f"[Interface]\n"
+                f"Address = {config.server_vpn_address}\n"
+                f"ListenPort = {config.wg_listen_port}\n"
+                f"PrivateKey = {server_priv}\n"
+                f"PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; "
+                f"iptables -A FORWARD -o wg0 -j ACCEPT; "
+                f"iptables -t nat -A POSTROUTING -o {default_iface} -j MASQUERADE\n"
+                f"PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; "
+                f"iptables -D FORWARD -o wg0 -j ACCEPT; "
+                f"iptables -t nat -D POSTROUTING -o {default_iface} -j MASQUERADE\n\n"
+            )
+            log("  Server keys generated.")
+        else:
+            # --------------------------------------------------------------
+            # ADDING DEVICE — reuse existing server keys, only generate client keys
+            # --------------------------------------------------------------
+            log("Existing server detected — reusing server keys...")
+
+            # Extract server private key from existing config
+            server_priv = ""
+            for line in existing_config_check.splitlines():
+                line = line.strip()
+                if line.startswith("PrivateKey"):
+                    server_priv = line.split("=", 1)[1].strip()
+                    break
+            if not server_priv:
+                raise RuntimeError("Could not extract server private key from existing config.")
+
+            _, server_pub, _ = _exec_command(
+                client, f"echo '{server_priv}' | wg pubkey", sensitive=True
+            )
+            if not server_pub:
+                raise RuntimeError("Failed to derive server public key from existing private key.")
+
+            # Backup existing config before modifying
+            timestamp_cmd = 'date +%Y%m%d-%H%M%S'
+            _, timestamp, _ = _exec_command(client, timestamp_cmd)
+            backup_path = f"/etc/wireguard/wg0.conf.backup-{timestamp}"
+            code, _, err = _exec_command(client, f"cp /etc/wireguard/wg0.conf {backup_path}")
+            if code != 0:
+                raise RuntimeError(f"Failed to backup existing config: {err}")
+            log(f"  Backed up to: {backup_path}")
+
+            # The existing config is the base — we'll append a new [Peer] after it
+            server_config = existing_config_check.rstrip() + "\n\n"
+            log("  Server keys reused.")
+
+        # ------------------------------------------------------------------
+        # Step 7 – Generate client keys (always for the new device)
+        # ------------------------------------------------------------------
+        log("Generating client keys...")
         _, client_priv, _ = _exec_command(client, "wg genkey", sensitive=True)
         if not client_priv:
             raise RuntimeError("Failed to generate client private key.")
@@ -287,51 +351,28 @@ def deploy_wireguard(
         )
         if not client_pub:
             raise RuntimeError("Failed to generate client public key.")
-        log("  Keys generated.")
+        log("  Client keys generated.")
 
         # ------------------------------------------------------------------
-        # Step 7 – Backup existing config if present
+        # Step 8 – Write server config (append new Peer if adding device)
         # ------------------------------------------------------------------
-        log("Backing up existing wg0.conf if needed...")
-        code, check_out, _ = _exec_command(client, "ls /etc/wireguard/wg0.conf 2>/dev/null || true")
-        if check_out and "wg0.conf" in check_out:
-            timestamp_cmd = 'date +%Y%m%d-%H%M%S'
-            _, timestamp, _ = _exec_command(client, timestamp_cmd)
-            backup_path = f"/etc/wireguard/wg0.conf.backup-{timestamp}"
-            code, _, err = _exec_command(client, f"cp /etc/wireguard/wg0.conf {backup_path}")
-            if code != 0:
-                raise RuntimeError(f"Failed to backup existing config: {err}")
-            log(f"  Backed up to: {backup_path}")
-        else:
-            log("  No existing config to backup.")
-
-        # Ensure wireguard directory exists
-        _exec_command(client, "mkdir -p /etc/wireguard")
-
-        # ------------------------------------------------------------------
-        # Step 8 – Write server config
-        # ------------------------------------------------------------------
-        log("Writing WireGuard server config...")
-        server_config = (
-            f"[Interface]\n"
-            f"Address = {config.server_vpn_address}\n"
-            f"ListenPort = {config.wg_listen_port}\n"
-            f"PrivateKey = {server_priv}\n"
-            f"PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; "
-            f"iptables -A FORWARD -o wg0 -j ACCEPT; "
-            f"iptables -t nat -A POSTROUTING -o {default_iface} -j MASQUERADE\n"
-            f"PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; "
-            f"iptables -D FORWARD -o wg0 -j ACCEPT; "
-            f"iptables -t nat -D POSTROUTING -o {default_iface} -j MASQUERADE\n\n"
+        new_peer = (
             f"[Peer]\n"
+            f"# {config.client_name}\n"
             f"PublicKey = {client_pub}\n"
             f"AllowedIPs = {config.client_vpn_address}\n"
         )
 
-        # Write via heredoc to avoid escaping issues
+        if is_first_deploy:
+            log("Writing WireGuard server config...")
+            full_config = server_config + new_peer
+        else:
+            log("Adding new device to existing WireGuard config...")
+            full_config = server_config + new_peer
+
         _exec_command(
             client,
-            f"cat > /etc/wireguard/wg0.conf << 'WGEOCONF'\n{server_config}\nWGEOCONF",
+            f"cat > /etc/wireguard/wg0.conf << 'WGEOCONF'\n{full_config}\nWGEOCONF",
         )
         code, _, err = _exec_command(client, "chmod 600 /etc/wireguard/wg0.conf")
         if code != 0:
@@ -339,20 +380,31 @@ def deploy_wireguard(
         log("  Server config written.")
 
         # ------------------------------------------------------------------
-        # Step 9 – Start WireGuard
+        # Step 9 – Start / reload WireGuard
         # ------------------------------------------------------------------
-        log("Starting WireGuard service...")
-        code, out, err = _exec_command(client, "systemctl enable wg-quick@wg0")
-        if code != 0:
-            raise RuntimeError(f"Failed to enable WireGuard service: {err or out}")
-
-        code, out, err = _exec_command(client, "systemctl restart wg-quick@wg0")
-        if code != 0:
-            raise RuntimeError(f"Failed to restart WireGuard service: {err or out}")
+        if is_first_deploy:
+            log("Starting WireGuard service...")
+            code, out, err = _exec_command(client, "systemctl enable wg-quick@wg0")
+            if code != 0:
+                raise RuntimeError(f"Failed to enable WireGuard service: {err or out}")
+            code, out, err = _exec_command(client, "systemctl restart wg-quick@wg0")
+            if code != 0:
+                raise RuntimeError(f"Failed to restart WireGuard service: {err or out}")
+        else:
+            log("Reloading WireGuard to add new device...")
+            # Use syncconf to apply the updated config without disrupting existing peers
+            code, out, err = _exec_command(
+                client, "wg syncconf wg0 <(wg-quick strip wg0)"
+            )
+            if code != 0:
+                # Fallback: restart if syncconf is not available
+                log("  syncconf unavailable, using restart instead...")
+                code, out, err = _exec_command(client, "systemctl restart wg-quick@wg0")
+                if code != 0:
+                    raise RuntimeError(f"Failed to restart WireGuard: {err or out}")
 
         code, status, err = _exec_command(client, "systemctl is-active wg-quick@wg0")
         if "active" not in status:
-            # Gather diagnostics
             _, diag, _ = _exec_command(
                 client, "systemctl status wg-quick@wg0 --no-pager -l"
             )
