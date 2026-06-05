@@ -63,10 +63,10 @@ app = BUNDLE(
     name="Urbans-Cannon.app",
     icon=os.path.join(_resources, "app_icon.icns"),
     bundle_identifier="com.urbanscannon.wireguard-deployer",
-    version="1.0",
+    version="1.1",
     info_plist={
-        "CFBundleShortVersionString": "1.0",
-        "CFBundleVersion": "1.0",
+        "CFBundleShortVersionString": "1.1",
+        "CFBundleVersion": "1.1",
         "NSHumanReadableCopyright": "Urban's Cannon",
         "NSHighResolutionCapable": True,
     },
