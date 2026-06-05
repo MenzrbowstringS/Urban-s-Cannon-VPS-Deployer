@@ -60,11 +60,6 @@ python resources/generate_icon.py
 # --- 6. Clean old builds ---
 echo "[7/7] Cleaning old builds..."
 rm -rf build dist
-shopt -s nullglob 2>/dev/null || true
-for f in *.spec; do rm -f "$f"; done
-
-# --- Detect PySide6 path for hidden imports ---
-PYSIDE6_DIR=$(python -c "import PySide6; import os; print(os.path.dirname(PySide6.__file__))")
 
 echo ""
 echo "============================================"
@@ -73,23 +68,14 @@ echo "============================================"
 echo ""
 
 pyinstaller \
-    --windowed \
-    --name "$APP_NAME" \
-    --icon "$ICON_DIR/app_icon.icns" \
-    --add-data "$ICON_DIR/app_icon.icns:resources" \
-    --add-data "$ICON_DIR/app_icon.png:resources" \
-    --hidden-import PySide6.QtCore \
-    --hidden-import PySide6.QtGui \
-    --hidden-import PySide6.QtWidgets \
-    --hidden-import paramiko.transport \
-    --hidden-import paramiko.dsskey \
-    --hidden-import paramiko.ecdsakey \
-    --hidden-import paramiko.ed25519key \
-    --hidden-import paramiko.rsakey \
-    --osx-bundle-identifier com.urbanscannon.wireguard-deployer \
+    "Urban's Cannon (macOS).spec" \
     --noconfirm \
-    --clean \
-    main.py
+    --clean
+
+# Rename bundled output to proper app name
+if [ -d "dist/Urbans-Cannon.app" ]; then
+    mv "dist/Urbans-Cannon.app" "dist/$APP_NAME.app"
+fi
 
 echo ""
 echo "============================================"

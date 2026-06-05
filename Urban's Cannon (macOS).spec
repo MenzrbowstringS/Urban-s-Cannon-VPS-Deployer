@@ -1,9 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 import os
-
-# Use CWD (always the checkout root on CI) — SPECPATH can be fragile with
-# filenames containing spaces and special characters.
 _spec_dir = os.getcwd()
 _resources = os.path.join(_spec_dir, "resources")
 
@@ -12,7 +9,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        (os.path.join(_resources, "app_icon.ico"), "resources"),
+        (os.path.join(_resources, "app_icon.icns"), "resources"),
         (os.path.join(_resources, "app_icon.png"), "resources"),
     ],
     hiddenimports=[
@@ -39,7 +36,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="Urban's Cannon",
+    name="Urbans-Cannon",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -50,7 +47,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=os.path.join(_resources, "app_icon.ico"),
+    icon=os.path.join(_resources, "app_icon.icns"),
 )
 coll = COLLECT(
     exe,
@@ -59,5 +56,18 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name="Urban's Cannon",
+    name="Urbans-Cannon",
+)
+app = BUNDLE(
+    coll,
+    name="Urbans-Cannon.app",
+    icon=os.path.join(_resources, "app_icon.icns"),
+    bundle_identifier="com.urbanscannon.wireguard-deployer",
+    version="1.0",
+    info_plist={
+        "CFBundleShortVersionString": "1.0",
+        "CFBundleVersion": "1.0",
+        "NSHumanReadableCopyright": "Urban's Cannon",
+        "NSHighResolutionCapable": True,
+    },
 )
