@@ -5,7 +5,7 @@
 | 平台 Platform | 下载 Download | 版本 Version |
 |:---:|---|---|
 | Windows | [Urbans-Cannon-1.0-Windows-Setup.exe](https://github.com/MenzrbowstringS/urbans-cannon/releases/latest/download/Urbans-Cannon-1.0-Windows-Setup.exe) | v1.0.5 |
-| macOS | [前往 Releases 下载](https://github.com/MenzrbowstringS/urbans-cannon/releases) | — |
+| macOS | [Urbans-Cannon-1.0.dmg](https://github.com/MenzrbowstringS/urbans-cannon/releases/download/v1.0-mac/Urbans-Cannon-1.0.dmg) | v1.0 |
 
 ---
 
