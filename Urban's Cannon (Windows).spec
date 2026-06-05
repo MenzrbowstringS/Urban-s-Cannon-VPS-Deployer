@@ -1,7 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 import os
-_spec_dir = os.path.dirname(os.path.abspath(SPECPATH))
+
+# Use CWD (always the checkout root on CI) — SPECPATH can be fragile with
+# filenames containing spaces and special characters.
+_spec_dir = os.getcwd()
 _resources = os.path.join(_spec_dir, "resources")
 
 a = Analysis(
