@@ -1,5 +1,12 @@
 # Private WireGuard VPS Deployer · 私有 WireGuard VPS 部署器
 
+## 下载 Download
+
+| 平台 Platform | 下载 Download | 版本 Version |
+|:---:|---|---|
+| Windows | [Urbans-Cannon-1.0-Windows-Setup.exe](https://github.com/MenzrbowstringS/urbans-cannon/releases/latest/download/Urbans-Cannon-1.0-Windows-Setup.exe) | v1.0.5 |
+| macOS | [前往 Releases 下载](https://github.com/MenzrbowstringS/urbans-cannon/releases) | — |
+
 ---
 
 ## 中文
