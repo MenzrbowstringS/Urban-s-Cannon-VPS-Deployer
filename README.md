@@ -4,7 +4,7 @@
 
 ## 中文
 
-一款 macOS / Windows 桌面应用，帮你自动在 Ubuntu 或 Debian VPS 上部署私人 WireGuard VPN 服务器——无需任何命令行知识。
+一款 macOS / Windows 桌面应用，帮你自动在 Ubuntu 或 Debian VPS 上部署私人VPN 服务器——无需任何命令行知识。
 
 ### 本软件的功能
 
@@ -153,7 +153,7 @@ journalctl -u wg-quick@wg0 -n 50 --no-pager   # 查看日志
 
 ## English
 
-A macOS / Windows desktop application that helps you automatically configure a personal WireGuard VPN server on your Ubuntu or Debian VPS — no command-line knowledge required.
+A macOS / Windows desktop application that helps you automatically configure a personal VPN server on your Ubuntu or Debian VPS — no command-line knowledge required.
 
 ### What This Software Does
 
