@@ -6,13 +6,16 @@ Usage:
     python resources/generate_icon_win.py
 
 Output:
-    resources/app_icon.ico  (16×16, 32×32, 48×48, 256×256)
+    resources/app_icon.ico  (16, 24, 32, 48, 64, 96, 128, 256)
 """
 
 import os
 from PIL import Image
 
-SIZES = [16, 32, 48, 256]
+# Full set of standard Windows icon sizes — missing intermediate sizes (especially
+# 96×96 for desktop DPI) causes Windows to scale the nearest smaller size up,
+# producing a blurry desktop shortcut icon.
+SIZES = [16, 24, 32, 48, 64, 96, 128, 256]
 SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_icon.png")
 DST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_icon.ico")
 
