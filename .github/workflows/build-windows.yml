@@ -45,7 +45,7 @@ jobs:
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: urbans-cannon-windows-installer
+          name: Urban-s-Cannon-VPS-Deployer-windows-installer
           path: dist/Urbans-Cannon-*-Windows-Setup.exe
 
       - name: Create GitHub Release
