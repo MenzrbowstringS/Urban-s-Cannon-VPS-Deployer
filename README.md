@@ -1,4 +1,4 @@
-# Private WireGuard VPS Deployer · 私有 WireGuard VPS 部署器
+# Urban's Cannon — VPS 自动部署
 
 ## 下载 Download
 
