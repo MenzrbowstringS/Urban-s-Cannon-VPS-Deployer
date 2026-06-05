@@ -155,7 +155,7 @@ def _mono_family() -> str:
     # Consolas is the universal fallback that ships with every release.
     return "Cascadia Code"
 
-APP_VERSION = "1.1"
+APP_VERSION = "1.2"
 
 
 def _qss() -> str:

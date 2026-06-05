@@ -5,10 +5,10 @@
 ;   iscc installer.iss
 ;
 ; Output:
-;   dist\Urbans-Cannon-1.0-Windows-Setup.exe
+;   dist\Urbans-Cannon-1.1-Windows-Setup.exe
 
 #define AppName "Urban's Cannon"
-#define AppVersion "1.0"
+#define AppVersion "1.1"
 #define AppPublisher "MenZenithRBowstringS"
 #define AppURL "https://github.com/Urban-s-Cannon/private-wireguard-vps-deployer"
 #define AppExeName "Urbans-Cannon.exe"

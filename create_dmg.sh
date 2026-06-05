@@ -17,7 +17,7 @@ cd "$SCRIPT_DIR"
 
 APP_NAME="Urban's Cannon"
 APP_PATH="dist/$APP_NAME.app"
-VERSION="1.1"
+VERSION="1.2"
 VOLNAME="Urban's Cannon"
 DMG_NAME="Urbans-Cannon-${VERSION}"
 DMG_PATH="dist/$DMG_NAME.dmg"
